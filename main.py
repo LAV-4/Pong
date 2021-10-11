@@ -45,13 +45,13 @@ class Paddle:
         self.color = color
         self.width = width
         self.height = height
-        self.posX = posX
-        self.posY = posY
+        self.posX = posX-width//2
+        self.posY = posY-height//2
         self.state = "stopped"
-        self.show()
+        self.draw()
 
-    def show(self):
-        p.draw.rect(self.screen, self.color, (self.posX-self.width//2, self.posY-self.height//2, self.width, self.height))
+    def draw(self):
+        p.draw.rect(self.screen, self.color, (self.posX, self.posY, self.width, self.height))
 
     def move(self):
         if self.state == "up":
@@ -60,23 +60,23 @@ class Paddle:
             self.posY += 12
 
     def clamp(self):
-        if self.posY-self.height//2 <= 0:
-            self.posY = self.height//2
-        elif self.posY+self.height//2 >= HEIGHT:
-            self.posY = HEIGHT-self.height//2
+        if self.posY <= 0:
+            self.posY = 0
+        elif self.posY+self.height >= HEIGHT:
+            self.posY = HEIGHT-self.height
 
     def restart_pos(self):
-        self.posY = HEIGHT//2
+        self.posY = HEIGHT//2-self.height//2
         self.state = "stopped"
-        self.show()
+        self.draw()
 
 
 class CollisionManager:
     def collision_ball_paddle1(self, ball, paddle):
         ballX = ball.posX
         ballY = ball.posY
-        paddle_rightX = paddle.posX - paddle.width//2
-        paddleY = paddle.posY - paddle.height//2
+        paddle_rightX = paddle.posX
+        paddleY = paddle.posY
 
         if ballY + ball.radius > paddleY and ballY - ball.radius < paddleY + paddle.height:
             if ballX - ball.radius <= paddle_rightX + paddle.width:
@@ -85,8 +85,8 @@ class CollisionManager:
     def collision_ball_paddle2(self, ball, paddle):
         ballX = ball.posX
         ballY = ball.posY
-        paddle_leftX = paddle.posX - paddle.width // 2
-        paddleY = paddle.posY - paddle.height // 2
+        paddle_leftX = paddle.posX
+        paddleY = paddle.posY
 
         if ballY + ball.radius > paddleY and ballY - ball.radius < paddleY + paddle.height:
             if ballX + ball.radius >= paddle_leftX:
@@ -100,10 +100,10 @@ class CollisionManager:
         return False
 
     def collision_ball_goal1(self, ball):
-        return ball.posX - ball.radius <= 15
+        return ball.posX - ball.radius <= 0
 
     def collision_ball_goal2(self, ball):
-        return ball.posX + ball.radius >= WIDTH - 15
+        return ball.posX + ball.radius >= WIDTH
 
 
 class PlayerScore:
@@ -114,9 +114,9 @@ class PlayerScore:
         self.posY = posY
         self.font = p.font.SysFont("monospace", 80, bold=True)
         self.label = self.font.render(self.points, False, WHITE)
-        self.show()
+        self.draw()
 
-    def show(self):
+    def draw(self):
         self.screen.blit(self.label, (self.posX - self.label.get_rect().width // 2, self.posY))
 
     def increase_score(self):
@@ -208,11 +208,11 @@ def main():
 
             paddle1.move()
             paddle1.clamp()
-            paddle1.show()
+            paddle1.draw()
 
-            paddle2.show()
-            paddle2.clamp()
             paddle2.move()
+            paddle2.clamp()
+            paddle2.draw()
 
             if collision.collision_ball_paddle1(ball, paddle1):
                 ball.paddle_collision()
@@ -235,8 +235,8 @@ def main():
                 paddle2.restart_pos()
                 game_over = True
 
-        score1.show()
-        score2.show()
+        score1.draw()
+        score2.draw()
 
         p.display.update()
         clock.tick(30)
